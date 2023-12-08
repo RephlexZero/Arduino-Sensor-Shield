@@ -1,7 +1,6 @@
 #include <Wire.h>
 #include <Adafruit_MMA8451.h>
 #include <HIH61xx.h>
-
 #include <Adafruit_Sensor.h> // Add this line to include the Adafruit Sensor library
 
 Adafruit_MMA8451 accelerometer;
@@ -11,18 +10,15 @@ HIH61xx<TwoWire> hih(Wire); // Initialize the humidity sensor with I2C and addre
 
 AsyncDelay samplingInterval;
 
-
 void powerUpErrorHandler(HIH61xx<TwoWire>& hih)
 {
   Serial.println("Error powering up HIH61xx device");
 }
 
-
 void readErrorHandler(HIH61xx<TwoWire>& hih)
 {
   Serial.println("Error reading from HIH61xx device");
 }
-
 
 void setup() {
     Wire.begin(); // Initialize I2C communication
@@ -45,14 +41,16 @@ void loop() {
     sensors_event_t event;
     accelerometer.getEvent(&event); // Read the accelerometer data
 
-    Serial.print("X: ");
-    Serial.print(event.acceleration.x);
-    Serial.print(" Y: ");
-    Serial.print(event.acceleration.y);
-    Serial.print(" Z: ");
-    Serial.println(event.acceleration.z);
+    float magnitude = sqrt(pow(event.acceleration.x, 2) + pow(event.acceleration.y, 2) + pow(event.acceleration.z, 2));
+    Serial.print("Magnitude: ");
+    Serial.println(magnitude);
 
     hih.read();
+
+    RED_LED = (magnitude > 1.5) ? 1 : 0;
+    ORANGE_LED = (hih.getRelHumidity() / 100.0 > 50) ? 0 : 1;
+    GREEN_LED = (analogValue > 512) ? 1 : 0;
+    
     // Fetch and print the results
     Serial.print("Relative humidity: ");
     Serial.print(hih.getRelHumidity() / 100.0);
@@ -63,5 +61,5 @@ void loop() {
     Serial.print("Status: ");
     Serial.println(hih.getStatus());
 
-    delay(500); // Wait for 500 milliseconds before requesting data again
+    samplingInterval.delay(); // Wait for the specified interval before requesting data again
 }
