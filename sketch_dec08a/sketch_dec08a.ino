@@ -1,11 +1,28 @@
 #include <Wire.h>
 #include <Adafruit_MMA8451.h>
-#include <Adafruit_HIH6130.h>
+#include <HIH61xx.h>
+
+#include <Adafruit_Sensor.h> // Add this line to include the Adafruit Sensor library
 
 Adafruit_MMA8451 accelerometer;
-Adafruit_HIH6130 humiditySensor;
+HIH61xx<TwoWire> hih(Wire); // Initialize the humidity sensor with I2C and address
 
 #define TSL257_PIN A1
+
+AsyncDelay samplingInterval;
+
+
+void powerUpErrorHandler(HIH61xx<TwoWire>& hih)
+{
+  Serial.println("Error powering up HIH61xx device");
+}
+
+
+void readErrorHandler(HIH61xx<TwoWire>& hih)
+{
+  Serial.println("Error reading from HIH61xx device");
+}
+
 
 void setup() {
     Wire.begin(); // Initialize I2C communication
@@ -14,12 +31,14 @@ void setup() {
     accelerometer.begin(); // Initialize the accelerometer
     accelerometer.setRange(MMA8451_RANGE_2_G); // Set the range of the accelerometer to 2G
 
-    humiditySensor.begin(); // Initialize the humidity sensor
+    // Set the handlers *before* calling initialise() in case something goes wrong
+    hih.setPowerUpErrorHandler(powerUpErrorHandler);
+    hih.setReadErrorHandler(readErrorHandler);
+    hih.initialise();
+    samplingInterval.start(3000, AsyncDelay::MILLIS);
 }
 
 void loop() {
-    Wire.requestFrom(8, 2); // Request 2 bytes of data from slave device with address 8
-
     int analogValue = analogRead(A0); // Read the analog value from pin A0
     Serial.println(analogValue); // Print the analog value
 
@@ -33,14 +52,16 @@ void loop() {
     Serial.print(" Z: ");
     Serial.println(event.acceleration.z);
 
-    float humidity = humiditySensor.readHumidity(); // Read the humidity value
-    float temperature = humiditySensor.readTemperature(); // Read the temperature value
-
-    Serial.print("Humidity: ");
-    Serial.print(humidity);
-    Serial.print(" %, Temperature: ");
-    Serial.print(temperature);
-    Serial.println(" °C");
+    hih.read();
+    // Fetch and print the results
+    Serial.print("Relative humidity: ");
+    Serial.print(hih.getRelHumidity() / 100.0);
+    Serial.println(" %");
+    Serial.print("Ambient temperature: ");
+    Serial.print(hih.getAmbientTemp() / 100.0);
+    Serial.println(" deg C");
+    Serial.print("Status: ");
+    Serial.println(hih.getStatus());
 
     delay(500); // Wait for 500 milliseconds before requesting data again
 }
