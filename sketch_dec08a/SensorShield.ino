@@ -1,14 +1,15 @@
-#include <Wire.h>
 #include <Adafruit_MMA8451.h>
-#include <HIH61xx.h>
 #include <Adafruit_Sensor.h>
+#include <HIH61xx.h>
+#include <Wire.h>
 
 #define RED_LED 10
 #define ORANGE_LED 11
 #define GREEN_LED 12
 
 Adafruit_MMA8451 accelerometer;
-HIH61xx<TwoWire> hih(Wire); // Initialize the humidity sensor with I2C and address
+HIH61xx<TwoWire>
+    hih(Wire); // Initialize the humidity sensor with I2C and address
 
 #define TSL257_PIN A1
 
@@ -18,18 +19,15 @@ static float humidity;
 static int luminosity;
 static uint8_t orientation;
 
-void powerUpErrorHandler(HIH61xx<TwoWire> &hih)
-{
+void powerUpErrorHandler(HIH61xx<TwoWire> &hih) {
   Serial.println("Error powering up HIH61xx device");
 }
 
-void readErrorHandler(HIH61xx<TwoWire> &hih)
-{
+void readErrorHandler(HIH61xx<TwoWire> &hih) {
   Serial.println("Error reading from HIH61xx device");
 }
 
-void setup()
-{
+void setup() {
   pinMode(RED_LED, OUTPUT);
   pinMode(ORANGE_LED, OUTPUT);
   pinMode(GREEN_LED, OUTPUT);
@@ -37,8 +35,9 @@ void setup()
   Wire.begin();       // Initialize I2C communication
   Serial.begin(9600); // Initialize serial communication
 
-  accelerometer.begin();                     // Initialize the accelerometer
-  accelerometer.setRange(MMA8451_RANGE_2_G); // Set the range of the accelerometer to 2G
+  accelerometer.begin(); // Initialize the accelerometer
+  accelerometer.setRange(
+      MMA8451_RANGE_2_G); // Set the range of the accelerometer to 2G
 
   // Set the handlers *before* calling initialise() in case something goes wrong
   hih.setPowerUpErrorHandler(powerUpErrorHandler);
@@ -47,9 +46,9 @@ void setup()
   samplingInterval.start(100, AsyncDelay::MILLIS);
 }
 
-void loop()
-{
-  int luminosity = analogRead(TSL257_PIN); // Read the analog value from the light sensor
+void loop() {
+  int luminosity =
+      analogRead(TSL257_PIN); // Read the analog value from the light sensor
   Serial.print("Luminosity:");
   Serial.println(luminosity); // Print the analog value
 
@@ -57,7 +56,9 @@ void loop()
   accelerometer.getEvent(&event); // Read the accelerometer data
 
   // Calculate the magnitude of acceleration
-  float magnitude = sqrt(pow(event.acceleration.x, 2) + pow(event.acceleration.y, 2) + pow(event.acceleration.z, 2));
+  float magnitude =
+      sqrt(pow(event.acceleration.x, 2) + pow(event.acceleration.y, 2) +
+           pow(event.acceleration.z, 2));
   Serial.print("Magnitude:");
   Serial.println(magnitude);
 
@@ -74,12 +75,14 @@ void loop()
   Serial.print(hih.getAmbientTemp() / 100.0);
   Serial.println(" deg C");
 
+  // LED control
   digitalWrite(RED_LED, (magnitude > 1.5));
   digitalWrite(ORANGE_LED, (humidity > 55));
-  //digitalWrite(GREEN_LED, (luminosity > 300));
+  // digitalWrite(GREEN_LED, (luminosity > 300));
   digitalWrite(GREEN_LED, orientation == MMA8451_PL_PUF);
-  switch (orientation)
-  {
+
+  // Print the orientation
+  switch (orientation) {
   case MMA8451_PL_PUF:
     Serial.println("Portrait Up Front");
     break;
