@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include <Adafruit_MMA8451.h>
 #include <HIH61xx.h>
-#include <Adafruit_Sensor.h> // Add this line to include the Adafruit Sensor library
+#include <Adafruit_Sensor.h>
 
 #define RED_LED 10
 #define ORANGE_LED 11
@@ -49,7 +49,7 @@ void setup()
 
 void loop()
 {
-  int luminosity = analogRead(A0); // Read the analog value from pin A0
+  int luminosity = analogRead(TSL257_PIN); // Read the analog value from the light sensor
   Serial.print("Luminosity:");
   Serial.println(luminosity); // Print the analog value
 
