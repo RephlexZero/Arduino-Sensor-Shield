@@ -44,7 +44,7 @@ void setup()
   hih.setPowerUpErrorHandler(powerUpErrorHandler);
   hih.setReadErrorHandler(readErrorHandler);
   hih.initialise();
-  samplingInterval.start(3000, AsyncDelay::MILLIS);
+  samplingInterval.start(100, AsyncDelay::MILLIS);
 }
 
 void loop()
@@ -56,6 +56,7 @@ void loop()
   sensors_event_t event;
   accelerometer.getEvent(&event); // Read the accelerometer data
 
+  // Calculate the magnitude of acceleration
   float magnitude = sqrt(pow(event.acceleration.x, 2) + pow(event.acceleration.y, 2) + pow(event.acceleration.z, 2));
   Serial.print("Magnitude:");
   Serial.println(magnitude);
